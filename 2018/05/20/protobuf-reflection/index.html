@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="protobuf," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="类Reflection接口类，提供方法来动态访问/修改message中的field的接口类。调用Message::GetReflection()获得messge对应的reflection。这个类没有放到Message类中，是从效率角度考虑的。因为绝大多数message的实现共用同一套Reflection（GeneratedMessageReflection），并且一个Message所有的objec">
+<meta name="keywords" content="protobuf">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Protobuf-Reflection类">
+<meta property="og:url" content="http://yoursite.com/2018/05/20/protobuf-reflection/index.html">
+<meta property="og:site_name" content="Felix1XuWei&#39;s Blog">
+<meta property="og:description" content="类Reflection接口类，提供方法来动态访问/修改message中的field的接口类。调用Message::GetReflection()获得messge对应的reflection。这个类没有放到Message类中，是从效率角度考虑的。因为绝大多数message的实现共用同一套Reflection（GeneratedMessageReflection），并且一个Message所有的objec">
+<meta property="og:locale" content="default">
+<meta property="og:image" content="https://github.com/felix1xuwei/MarkdownPics/raw/master/pics/protobuf/pb_reflection_array_demo.png">
+<meta property="og:image" content="https://github.com/felix1xuwei/MarkdownPics/raw/master/pics/protobuf/pb_reflection_memory.png">
+<meta property="og:updated_time" content="2018-06-01T02:26:56.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Protobuf-Reflection类">
+<meta name="twitter:description" content="类Reflection接口类，提供方法来动态访问/修改message中的field的接口类。调用Message::GetReflection()获得messge对应的reflection。这个类没有放到Message类中，是从效率角度考虑的。因为绝大多数message的实现共用同一套Reflection（GeneratedMessageReflection），并且一个Message所有的objec">
+<meta name="twitter:image" content="https://github.com/felix1xuwei/MarkdownPics/raw/master/pics/protobuf/pb_reflection_array_demo.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2018/05/20/protobuf-reflection/"/>
+
+
+
+
+
+  <title>Protobuf-Reflection类 | Felix1XuWei's Blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="default">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Felix1XuWei's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            About
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/05/20/protobuf-reflection/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Xu Wei">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Felix1XuWei's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Protobuf-Reflection类</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-05-20T20:23:05+08:00">
+                2018-05-20
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="类Reflection"><a href="#类Reflection" class="headerlink" title="类Reflection"></a>类Reflection</h2><p>接口类，提供方法来动态访问/修改message中的field的接口类。调用<code>Message::GetReflection()</code>获得messge对应的reflection。<br>这个类没有放到Message类中，是<code>从效率角度考虑</code>的。因为绝大多数message的实现共用同一套Reflection（GeneratedMessageReflection），并且一个Message所有的object是共享同一个reflection object的。</p>
+<p>注意：  </p>
+<ol>
+<li>针对所有不同的field类型<code>FieldDescriptor::TYPE_*</code>,需要使用不同的<code>Get*()/Set*()/Add*()</code> 接口;</li>
+<li>repeated类型需要使用<code>GetRepeated*()/SetRepeated*()</code>接口，不可以和非repeated类型接口混用；</li>
+<li>message对象只可以被由它自身的<code>reflection（message.GetReflection()）</code>来操作；</li>
+</ol>
+<p>那么为什么需要针对每种<code>FieldDescriptor::TYPE_*</code>有单独的<code>Get*()/Set*()</code>呢？<br>因为如果使用抽象的type来解决，需要增加一层处理，这会导致message占用内存变大，也增加了内存泄漏的风险，所以在用这种flat的接口设计。</p>
+<h2 id="类GeneratedMessageReflection"><a href="#类GeneratedMessageReflection" class="headerlink" title="类GeneratedMessageReflection"></a>类GeneratedMessageReflection</h2><p>类Reflection的子类（也是当前版本中唯一的子类），服务于某一个固定的descriptor（构造GeneratedMessageReflection对象时就确定了对应的descriptor）。反射机制中最为核心的类。</p>
+<h3 id="内部实现："><a href="#内部实现：" class="headerlink" title="内部实现："></a>内部实现：</h3><p>操作任何一个数据时，需要知道2个信息即可：</p>
+<ol>
+<li>内存地址；</li>
+<li>类型信息;</li>
+</ol>
+<p>GeneratedMessageReflection也是这样设计的。GeneratedMessageReflection通过<code>base_addr + $offset[i]</code> 的方式管理message所有的field，<code>$offset[i]</code>记录了message中每个field在message内存对象中的偏移，并且descriptor中有每个field的类型信息。</p>
+<blockquote>
+<p>需要针对某个(message, field)做处理的时候：</p>
+</blockquote>
+<ol>
+<li>直接通过descriptor获取对应field在message中的index</li>
+<li>再查询offset[$index]获取内存地址</li>
+<li>然后通过descriptor中type信息</li>
+<li>做reinterpret_cast就获得对应数据。</li>
+</ol>
+<blockquote>
+<p>构建GeneratedMessageReflection对象时，传入的核心数据是： </p>
+</blockquote>
+<ol>
+<li>descriptor：被管理的message的descriptor指针；</li>
+<li>offsets：message类的所有成员在message类内存对象的偏移；</li>
+<li><code>has_bits_offset</code>： 用于”记录某个field是否存在的bitmap”的偏移（这个bitmap是message子类内部成员，其实是取这个数组0元素<code>_has_bits_[0]</code>的偏移）,这个bitmap最终是用来判断optional类型的field是否存在；</li>
+<li><code>unknown_fields_offset</code>： 和<code>has_bits_offset</code>功能类似，用于记录unkown数据；</li>
+</ol>
+<blockquote>
+<p>field有不同的类型，所以需要将<code>void*</code>转化为相应的类型。</p>
+</blockquote>
+<ol>
+<li>对于primitive类型和string类型，直接使用对应primitive类型/string*表示；</li>
+<li>单个Message类型field，通过Message的指针来保存；</li>
+<li>Enum类型field，通过int来保存，这个int作为EnumDescriptor::FindValueByNumber()的输入；</li>
+<li>Repeated类型field（细节见《repeated字段》一章）：</li>
+<li>其中Strings/Message类型使用RepeatedPtrFields</li>
+<li>其它primitive类型使用RepeatedFields</li>
+</ol>
+<h3 id="应用举例："><a href="#应用举例：" class="headerlink" title="应用举例："></a>应用举例：</h3><p>在每个.pb.cc文件中，对应每个message都有对应的<code>GeneratedMessageReflection</code>对象。例如针对<code>protobuf/compiler/plugin.proto</code>文件中的message CodeGeneratorRequest，在<code>protobuf/compiler/plugin.pb.cc</code>中：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">namespace</span> &#123;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> ::google::protobuf::Descriptor* CodeGeneratorRequest_descriptor_ = <span class="literal">NULL</span>;</span><br><span class="line"><span class="keyword">const</span> ::google::protobuf::internal::GeneratedMessageReflection*</span><br><span class="line">  CodeGeneratorRequest_reflection_ = <span class="literal">NULL</span>;</span><br><span class="line"></span><br><span class="line">…… <span class="comment">//省略</span></span><br><span class="line">                                                                                                                          </span><br><span class="line">&#125;  <span class="comment">// namespace</span></span><br><span class="line"></span><br><span class="line">…… <span class="comment">//省略</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">protobuf_AssignDesc_google_2fprotobuf_2fcompiler_2fplugin_2eproto</span><span class="params">()</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">…… <span class="comment">//省略</span></span><br><span class="line"></span><br><span class="line">  <span class="comment">// CodeGeneratorRequest包含这3个field</span></span><br><span class="line">   <span class="keyword">static</span> <span class="keyword">const</span> <span class="keyword">int</span> CodeGeneratorRequest_offsets_[<span class="number">3</span>] = &#123;                                                                                                                     </span><br><span class="line">    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CodeGeneratorRequest, file_to_generate_),</span><br><span class="line">    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CodeGeneratorRequest, parameter_),</span><br><span class="line">    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CodeGeneratorRequest, proto_file_),</span><br><span class="line">  &#125;;</span><br><span class="line"></span><br><span class="line">  CodeGeneratorRequest_reflection_ =</span><br><span class="line">    <span class="keyword">new</span> ::google::protobuf::internal::GeneratedMessageReflection(</span><br><span class="line">      CodeGeneratorRequest_descriptor_,</span><br><span class="line">      CodeGeneratorRequest::default_instance_,</span><br><span class="line">      CodeGeneratorRequest_offsets_,</span><br><span class="line">      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CodeGeneratorRequest, _has_bits_[<span class="number">0</span>]),</span><br><span class="line">      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CodeGeneratorRequest, _unknown_fields_),</span><br><span class="line">      <span class="number">-1</span>,  </span><br><span class="line">      ::google::protobuf::DescriptorPool::generated_pool(),</span><br><span class="line">      ::google::protobuf::MessageFactory::generated_factory(),</span><br><span class="line">      <span class="keyword">sizeof</span>(CodeGeneratorRequest));</span><br><span class="line"></span><br><span class="line">…… <span class="comment">//省略</span></span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="GOOGLE-PROTOBUF-GENERATED-MESSAGE-FIELD-OFFSET宏"><a href="#GOOGLE-PROTOBUF-GENERATED-MESSAGE-FIELD-OFFSET宏" class="headerlink" title="GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET宏"></a><code>GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET</code>宏</h3><p><code>GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET</code>宏作用是找到某个field在所被包含type内存的offset</p>
+<blockquote>
+<p>Q：pb.h定义中，field都是message子类的private成员，这里为什么可以通过”-&gt;”访问private成员呢？</p>
+<p>A: 函数<code>protobuf_AssignDesc_google_2fprotobuf_2fcompiler_2fplugin_2eproto()</code>被定义为各个message子类的friend（定义在private部分）</p>
+</blockquote>
+<p>这里代码注释给了很多信息！protobuf针对关键点的注释非常详细，值得学习！</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Returns the offset of the given field within the given aggregate type.</span></span><br><span class="line"><span class="comment">// This is equivalent to the ANSI C offsetof() macro.  However, according</span></span><br><span class="line"><span class="comment">// to the C++ standard, offsetof() only works on POD types, and GCC</span></span><br><span class="line"><span class="comment">// enforces this requirement with a warning.  In practice, this rule is</span></span><br><span class="line"><span class="comment">// unnecessarily strict; there is probably no compiler or platform on</span></span><br><span class="line"><span class="comment">// which the offsets of the direct fields of a class are non-constant.</span></span><br><span class="line"><span class="comment">// Fields inherited from superclasses *can* have non-constant offsets,</span></span><br><span class="line"><span class="comment">// but that's not what this macro will be used for.</span></span><br><span class="line"><span class="comment">//</span></span><br><span class="line"><span class="comment">// Note that we calculate relative to the pointer value 16 here since if we</span></span><br><span class="line"><span class="comment">// just use zero, GCC complains about dereferencing a NULL pointer.  We</span></span><br><span class="line"><span class="comment">// choose 16 rather than some other number just in case the compiler would</span></span><br><span class="line"><span class="comment">// be confused by an unaligned pointer.</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(TYPE, FIELD)    \</span></span><br><span class="line">  <span class="keyword">static_cast</span>&lt;<span class="keyword">int</span>&gt;(                                           \</span><br><span class="line">    <span class="keyword">reinterpret_cast</span>&lt;<span class="keyword">const</span> <span class="keyword">char</span>*&gt;(                            \</span><br><span class="line">      &amp;<span class="keyword">reinterpret_cast</span>&lt;<span class="keyword">const</span> TYPE*&gt;(<span class="number">16</span>)-&gt;FIELD) -            \</span><br><span class="line">    <span class="keyword">reinterpret_cast</span>&lt;<span class="keyword">const</span> <span class="keyword">char</span>*&gt;(<span class="number">16</span>))</span><br></pre></td></tr></table></figure>
+<h3 id="举例说明"><a href="#举例说明" class="headerlink" title="举例说明"></a>举例说明</h3><p>以primitive类型为例说明GeneratedMessageReflection如何管理各个不同类型的field。</p>
+<h4 id="在read一侧："><a href="#在read一侧：" class="headerlink" title="在read一侧："></a>在read一侧：</h4><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Template implementations of basic accessors.  Inline because each</span></span><br><span class="line"><span class="comment">// template instance is only called from one location.  These are</span></span><br><span class="line"><span class="comment">// used for all types except messages.</span></span><br><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> Type&gt;</span><br><span class="line"><span class="keyword">inline</span> <span class="keyword">const</span> Type&amp; GeneratedMessageReflection::GetField(</span><br><span class="line">    <span class="keyword">const</span> Message&amp; message, <span class="keyword">const</span> FieldDescriptor* field) <span class="keyword">const</span> &#123;</span><br><span class="line">  <span class="keyword">return</span> GetRaw&lt;Type&gt;(message, field);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>从message内存起始地址，按照field在message对象内存中的offset偏移之后获取field的内存地址，然后<code>reinterpret_cast</code>为Type类型（primitive的）</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// These simple template accessors obtain pointers (or references) to</span></span><br><span class="line"><span class="comment">// the given field.</span></span><br><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> Type&gt;</span><br><span class="line"><span class="keyword">inline</span> <span class="keyword">const</span> Type&amp; GeneratedMessageReflection::GetRaw(                                                                    </span><br><span class="line">    <span class="keyword">const</span> Message&amp; message, <span class="keyword">const</span> FieldDescriptor* field) <span class="keyword">const</span> &#123;</span><br><span class="line">  <span class="keyword">const</span> <span class="keyword">void</span>* ptr = <span class="keyword">reinterpret_cast</span>&lt;<span class="keyword">const</span> uint8*&gt;(&amp;message) +</span><br><span class="line">                    offsets_[field-&gt;index()];</span><br><span class="line">  <span class="keyword">return</span> *<span class="keyword">reinterpret_cast</span>&lt;<span class="keyword">const</span> Type*&gt;(ptr);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里的<code>offsets_[]</code>就是构造函数<code>GeneratedMessageReflection::GeneratedMessageReflection()</code>传入的，各个field在message中的偏移量数组（也就是上面例子中的 <code>CodeGeneratorRequest_offsets_[3]</code>）。<code>field-&gt;index()</code>是field在parent的children数组中的pos，实现如下：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">			<span class="keyword">inline</span> <span class="keyword">int</span> FieldDescriptor::index() <span class="keyword">const</span> &#123;</span><br><span class="line">				...... <span class="comment">//省略</span></span><br><span class="line">			    <span class="keyword">return</span> <span class="keyword">this</span> - containing_type_-&gt;fields_;</span><br><span class="line">				...... <span class="comment">//省略</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="在write一侧："><a href="#在write一侧：" class="headerlink" title="在write一侧："></a>在write一侧：</h4><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> Type&gt;</span><br><span class="line"><span class="keyword">inline</span> <span class="keyword">void</span> GeneratedMessageReflection::SetField(</span><br><span class="line">    Message* message, <span class="keyword">const</span> FieldDescriptor* field, <span class="keyword">const</span> Type&amp; value) <span class="keyword">const</span> &#123;</span><br><span class="line">  *MutableRaw&lt;Type&gt;(message, field) = value;</span><br><span class="line">  SetBit(message, field);</span><br><span class="line">     &#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> Type&gt;</span><br><span class="line"><span class="keyword">inline</span> Type* GeneratedMessageReflection::MutableRaw(</span><br><span class="line">    Message* message, <span class="keyword">const</span> FieldDescriptor* field) <span class="keyword">const</span> &#123;</span><br><span class="line">  <span class="keyword">void</span>* ptr = <span class="keyword">reinterpret_cast</span>&lt;uint8*&gt;(message) + offsets_[field-&gt;index()];</span><br><span class="line">  <span class="keyword">return</span> <span class="keyword">reinterpret_cast</span>&lt;Type*&gt;(ptr);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里has_bits_offset_为bitmap结构，通过某个bit是否存在，快速判断对应filed是否存在</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">inline</span> <span class="keyword">void</span> GeneratedMessageReflection::SetBit(</span><br><span class="line">    Message* message, <span class="keyword">const</span> FieldDescriptor* field) <span class="keyword">const</span> &#123;</span><br><span class="line">  MutableHasBits(message)[field-&gt;index() / <span class="number">32</span>] |= (<span class="number">1</span> &lt;&lt; (field-&gt;index() % <span class="number">32</span>));</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">inline</span> uint32* GeneratedMessageReflection::MutableHasBits(</span><br><span class="line">    Message* message) <span class="keyword">const</span> &#123;</span><br><span class="line">  <span class="keyword">void</span>* ptr = <span class="keyword">reinterpret_cast</span>&lt;uint8*&gt;(message) + has_bits_offset_;</span><br><span class="line">  <span class="keyword">return</span> <span class="keyword">reinterpret_cast</span>&lt;uint32*&gt;(ptr);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>RepeatedPtrFields / RepeatedFields</code>具体实现，见repeated_field.*文件，详情见《repeated字段》一章</p>
+<h3 id="内存分布说明"><a href="#内存分布说明" class="headerlink" title="内存分布说明"></a>内存分布说明</h3><p>举一个具体的例子来说明<code>offset[]</code>的工作方式吧：</p>
+<ol>
+<li>从message Student定义到对应class Student</li>
+<li>再到offset以及Student类对象内存分布说明，请见下图：</li>
+</ol>
+<p><img src="https://github.com/felix1xuwei/MarkdownPics/raw/master/pics/protobuf/pb_reflection_array_demo.png" alt="avatar"></p>
+<h4 id="Message类对象内存分布"><a href="#Message类对象内存分布" class="headerlink" title="Message类对象内存分布"></a>Message类对象内存分布</h4><p>针对不同类型，有不同的内存记录方式：</p>
+<ol>
+<li>primitve类型：直接在内存中保存了对应的value；</li>
+<li>string类型，保存的是string*地址；</li>
+<li><code>repeated&lt;message&gt;</code>类型，保存的是<code>RepeatedPtrField&lt;message&gt;</code>对象，采用2级内存管理，第一级内部数据管理的是<code>array&lt;void*&gt;</code>，<code>void*</code>是真实message对象内存地址</li>
+<li><code>repeated&lt;primitive&gt;</code>类型，保存的是<code>RepeatedField&lt;primitive&gt;</code>对象,内部数据管理的是<code>array&lt;primitive数据对象&gt;</code></li>
+</ol>
+<p>Student类中包含了多种类型成员，对应内存查找过程如下图所示：</p>
+<p><img src="https://github.com/felix1xuwei/MarkdownPics/raw/master/pics/protobuf/pb_reflection_memory.png" alt="avatar"></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/protobuf/" rel="tag"># protobuf</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/05/19/protobuf-repeated/" rel="next" title="Protobuf-Repeated相关类">
+                <i class="fa fa-chevron-left"></i> Protobuf-Repeated相关类
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/05/26/protobuf-compiler/" rel="prev" title="Protobuf-Compiler相关类&代码生成流程">
+                Protobuf-Compiler相关类&代码生成流程 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">Xu Wei</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">9</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">1</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#类Reflection"><span class="nav-number">1.</span> <span class="nav-text">类Reflection</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#类GeneratedMessageReflection"><span class="nav-number">2.</span> <span class="nav-text">类GeneratedMessageReflection</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#内部实现："><span class="nav-number">2.1.</span> <span class="nav-text">内部实现：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#应用举例："><span class="nav-number">2.2.</span> <span class="nav-text">应用举例：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#GOOGLE-PROTOBUF-GENERATED-MESSAGE-FIELD-OFFSET宏"><span class="nav-number">2.3.</span> <span class="nav-text">GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET宏</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#举例说明"><span class="nav-number">2.4.</span> <span class="nav-text">举例说明</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#在read一侧："><span class="nav-number">2.4.1.</span> <span class="nav-text">在read一侧：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#在write一侧："><span class="nav-number">2.4.2.</span> <span class="nav-text">在write一侧：</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#内存分布说明"><span class="nav-number">2.5.</span> <span class="nav-text">内存分布说明</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Message类对象内存分布"><span class="nav-number">2.5.1.</span> <span class="nav-text">Message类对象内存分布</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Xu Wei</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

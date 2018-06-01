@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="protobuf," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="类Descriptor描述一种message类型（不是一个单独的message对象）的meta信息。构造函数是private类型，必须通过DescriptorPool（friend类）来构造。 const的成员： const FileDescriptor* file_： 描述message所在的.proto文件信息 const Descriptor* containing_type_：如果在pro">
+<meta name="keywords" content="protobuf">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Protobuf-Descriptor相关类">
+<meta property="og:url" content="http://yoursite.com/2018/05/12/protobuf-descriptor/index.html">
+<meta property="og:site_name" content="Felix1XuWei&#39;s Blog">
+<meta property="og:description" content="类Descriptor描述一种message类型（不是一个单独的message对象）的meta信息。构造函数是private类型，必须通过DescriptorPool（friend类）来构造。 const的成员： const FileDescriptor* file_： 描述message所在的.proto文件信息 const Descriptor* containing_type_：如果在pro">
+<meta property="og:locale" content="default">
+<meta property="og:image" content="https://github.com/felix1xuwei/MarkdownPics/raw/master/pics/protobuf/pb_descriptor_database.png">
+<meta property="og:updated_time" content="2018-06-01T02:12:46.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Protobuf-Descriptor相关类">
+<meta name="twitter:description" content="类Descriptor描述一种message类型（不是一个单独的message对象）的meta信息。构造函数是private类型，必须通过DescriptorPool（friend类）来构造。 const的成员： const FileDescriptor* file_： 描述message所在的.proto文件信息 const Descriptor* containing_type_：如果在pro">
+<meta name="twitter:image" content="https://github.com/felix1xuwei/MarkdownPics/raw/master/pics/protobuf/pb_descriptor_database.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2018/05/12/protobuf-descriptor/"/>
+
+
+
+
+
+  <title>Protobuf-Descriptor相关类 | Felix1XuWei's Blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="default">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Felix1XuWei's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            About
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/05/12/protobuf-descriptor/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Xu Wei">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Felix1XuWei's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Protobuf-Descriptor相关类</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-05-12T23:07:40+08:00">
+                2018-05-12
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="类Descriptor"><a href="#类Descriptor" class="headerlink" title="类Descriptor"></a>类Descriptor</h2><p>描述一种message类型（不是一个单独的message对象）的meta信息。构造函数是private类型，必须通过DescriptorPool（friend类）来构造。</p>
+<h4 id="const的成员："><a href="#const的成员：" class="headerlink" title="const的成员："></a>const的成员：</h4><ol>
+<li><code>const FileDescriptor* file_</code>： 描述message所在的.proto文件信息</li>
+<li><code>const Descriptor* containing_type_</code>：如果在proto定义中，这个message是被其它message所包含，那么这个字段是上一级message的<code>descriptor*</code>；如果没有被包含，那么是NULL</li>
+<li><code>const MessageOptions* options_</code>： 定义在descriptor.proto，从注释看是用来和老版本proto1中MessageSet做拓展，可以先不去关注涉及extension的部分。</li>
+</ol>
+<h4 id="非const的成员："><a href="#非const的成员：" class="headerlink" title="非const的成员："></a>非const的成员：</h4><ol>
+<li><code>int field_count_</code>：当前field包含的field的个数</li>
+<li><code>FieldDescriptor* fields_</code>： 以连续数组方式保存的所有的fieds</li>
+<li><code>int nested_type_count_</code>: 嵌套类型数量</li>
+<li><code>Descriptor* nested_types_</code>: message中嵌套message</li>
+<li><code>int enum_type_count_</code>： 内部enum的个数</li>
+<li><code>EnumDescriptor* enum_types_</code>： enum类型的连续内存起始地址</li>
+</ol>
+<h2 id="类FileDescriptor"><a href="#类FileDescriptor" class="headerlink" title="类FileDescriptor"></a>类FileDescriptor</h2><p>描述整个.proto文件信息，其中包含：</p>
+<ol>
+<li><p>依赖.proto文件信息：</p>
+<p> <code>int dependency_count_;</code></p>
+<p> <code>const FileDescriptor** dependencies_;</code></p>
+</li>
+<li><p>当前.proto文件包含的message信息：</p>
+<p> <code>int message_type_count_;</code></p>
+<p> <code>Descriptor* message_types_;</code></p>
+</li>
+<li><p>当前.proto文件包含的所有symbol (各种descriptor)的tables：</p>
+<p> <code>const FileDescriptorTables* tables_;</code></p>
+</li>
+</ol>
+<h2 id="类FieldDescriptor"><a href="#类FieldDescriptor" class="headerlink" title="类FieldDescriptor"></a>类FieldDescriptor</h2><p>描述一个单独的field，构造函数为private，也必须由<code>DescriptorPool</code>（friend类）构造。通过包含这个field的message的descriptor的函数（<code>Descriptor::FindFieldByName()</code>）获得。</p>
+<h3 id="enum类型："><a href="#enum类型：" class="headerlink" title="enum类型："></a>enum类型：</h3><pre><code>enum Type ： field类型；
+enum CppType： cpp中field类型，CppType和Type类型映射关系是固定的；
+enum Label ：标记field的存在性类型(optional/required/repeated)；
+</code></pre><h3 id="const类型的private数据："><a href="#const类型的private数据：" class="headerlink" title="const类型的private数据："></a>const类型的private数据：</h3><pre><code>const Descriptor* containing_type_;
+const Descriptor* extension_scope_;
+const Descriptor* message_type_;
+const EnumDescriptor* enum_type_;
+const FieldDescriptor* experimental_map_key_;
+const FieldOptions* options_;
+</code></pre><h3 id="3个映射表（static-const类型）："><a href="#3个映射表（static-const类型）：" class="headerlink" title="3个映射表（static const类型）："></a>3个映射表（static const类型）：</h3><pre><code>static const CppType kTypeToCppTypeMap[MAX_TYPE + 1];
+static const char * const kTypeToName[MAX_TYPE + 1];
+static const char * const kLabelToName[MAX_LABEL + 1];
+</code></pre><p>在descriptor.cc中，实现对外暴露数据的函数时，为了提高代码可读性，使用了如下宏的方式：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">PROTOBUF_DEFINE_ACCESSOR(FieldDescriptor, default_value_int32 , int32 )</span><br><span class="line">PROTOBUF_DEFINE_ACCESSOR(FieldDescriptor, has_default_value, <span class="keyword">bool</span>)</span><br></pre></td></tr></table></figure>
+<p><code>PROTOBUF_DEFINE_ACCESSOR</code>的定义如下：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// These macros makes this repetitive code more readable.</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PROTOBUF_DEFINE_ACCESSOR(CLASS, FIELD, TYPE) \</span></span><br><span class="line">  <span class="keyword">inline</span> TYPE CLASS::FIELD() <span class="keyword">const</span> &#123; <span class="keyword">return</span> FIELD##_; &#125;</span><br></pre></td></tr></table></figure>
+<p>因为FieldDescriptor自己包含如下union数据成员，用来表示不同TYPE类型数据的default值：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span>:</span><br><span class="line">  <span class="keyword">bool</span> has_default_value_;</span><br><span class="line">  <span class="keyword">union</span> &#123;</span><br><span class="line">    int32  default_value_int32_;</span><br><span class="line">    int64  default_value_int64_;</span><br><span class="line">    uint32 default_value_uint32_;</span><br><span class="line">    uint64 default_value_uint64_;</span><br><span class="line">    <span class="keyword">float</span>  default_value_float_;</span><br><span class="line">    <span class="keyword">double</span> default_value_double_;</span><br><span class="line">    <span class="keyword">bool</span>   default_value_bool_;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">const</span> EnumValueDescriptor* default_value_enum_;</span><br><span class="line">    <span class="keyword">const</span> <span class="built_in">string</span>* default_value_string_;</span><br><span class="line">  &#125;;</span><br></pre></td></tr></table></figure>
+<h2 id="类EnumDescriptor"><a href="#类EnumDescriptor" class="headerlink" title="类EnumDescriptor"></a>类EnumDescriptor</h2><p>描述在.proto文件中定义的enum类型</p>
+<h2 id="结构体Symbol"><a href="#结构体Symbol" class="headerlink" title="结构体Symbol"></a>结构体Symbol</h2><p>针对protobuf中7种类型的descriptor的一个封装。<br>编程上，也适用union来适配不同类型的descriptor：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">Type type;</span><br><span class="line"></span><br><span class="line"><span class="keyword">union</span> &#123;</span><br><span class="line">  <span class="keyword">const</span> Descriptor* descriptor;</span><br><span class="line">  <span class="keyword">const</span> FieldDescriptor* field_descriptor;</span><br><span class="line">  <span class="keyword">const</span> EnumDescriptor* enum_descriptor;</span><br><span class="line">  <span class="keyword">const</span> EnumValueDescriptor* enum_value_descriptor;</span><br><span class="line">  <span class="keyword">const</span> ServiceDescriptor* service_descriptor;</span><br><span class="line">  <span class="keyword">const</span> MethodDescriptor* method_descriptor;</span><br><span class="line">  <span class="keyword">const</span> FileDescriptor* package_file_descriptor;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>提高代码可读性上，使用宏的方式：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span> CONSTRUCTOR(TYPE, TYPE_CONSTANT, FIELD)  \</span></span><br><span class="line">  <span class="function"><span class="keyword">inline</span> <span class="keyword">explicit</span> <span class="title">Symbol</span><span class="params">(<span class="keyword">const</span> TYPE* value)</span> </span>&#123;    \</span><br><span class="line">    type = TYPE_CONSTANT;                        \</span><br><span class="line">    <span class="keyword">this</span>-&gt;FIELD = value;                         \</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  CONSTRUCTOR(Descriptor         , MESSAGE   , descriptor             )</span><br><span class="line">  CONSTRUCTOR(FieldDescriptor    , FIELD     , field_descriptor       )</span><br><span class="line">  CONSTRUCTOR(EnumDescriptor     , ENUM      , enum_descriptor        )</span><br><span class="line">  CONSTRUCTOR(EnumValueDescriptor, ENUM_VALUE, enum_value_descriptor  )</span><br><span class="line">  CONSTRUCTOR(ServiceDescriptor  , SERVICE   , service_descriptor     )</span><br><span class="line">  CONSTRUCTOR(MethodDescriptor   , METHOD    , method_descriptor      )</span><br><span class="line">  CONSTRUCTOR(FileDescriptor     , PACKAGE   , package_file_descriptor)</span><br><span class="line"><span class="meta">#<span class="meta-keyword">undef</span> CONSTRUCTOR</span></span><br></pre></td></tr></table></figure>
+<h2 id="类DescriptorPool-Tables"><a href="#类DescriptorPool-Tables" class="headerlink" title="类DescriptorPool::Tables"></a>类DescriptorPool::Tables</h2><p>各种数据表的集合，封装 了一系列的hashmap结构。<br>注意这个类是descriptor.h文件中在类<code>DescriptorPool</code>的private成员中声明的，所以是类<code>DescriptorPool</code>内部的数据结构，</p>
+<p><strong>封装的一系列的hashmap：</strong></p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> pair&lt;<span class="keyword">const</span> <span class="keyword">void</span>*, <span class="keyword">const</span> <span class="keyword">char</span>*&gt; PointerStringPair;</span><br><span class="line"><span class="comment">//这里是将message对应的descriptor地址和int组合在一起，指定descriptor中的某一个field</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">typedef</span> pair&lt;<span class="keyword">const</span> Descriptor*, <span class="keyword">int</span>&gt; DescriptorIntPair;    </span><br><span class="line"><span class="keyword">typedef</span> pair&lt;<span class="keyword">const</span> EnumDescriptor*, <span class="keyword">int</span>&gt; EnumIntPair;</span><br><span class="line">	</span><br><span class="line"></span><br><span class="line"><span class="keyword">typedef</span> hash_map&lt;<span class="keyword">const</span> <span class="keyword">char</span>*, Symbol,</span><br><span class="line">                 hash&lt;<span class="keyword">const</span> <span class="keyword">char</span>*&gt;, streq&gt;</span><br><span class="line">  SymbolsByNameMap;</span><br><span class="line">  </span><br><span class="line"><span class="keyword">typedef</span> hash_map&lt;PointerStringPair, Symbol,                     </span><br><span class="line">                 PointerStringPairHash, PointerStringPairEqual&gt;</span><br><span class="line">  SymbolsByParentMap;   </span><br><span class="line">  </span><br><span class="line"><span class="keyword">typedef</span> hash_map&lt;<span class="keyword">const</span> <span class="keyword">char</span>*, <span class="keyword">const</span> FileDescriptor*,</span><br><span class="line">                 hash&lt;<span class="keyword">const</span> <span class="keyword">char</span>*&gt;, streq&gt;</span><br><span class="line">  FilesByNameMap;</span><br><span class="line">  </span><br><span class="line"><span class="keyword">typedef</span> hash_map&lt;PointerStringPair, <span class="keyword">const</span> FieldDescriptor*,</span><br><span class="line">                 PointerStringPairHash, PointerStringPairEqual&gt;</span><br><span class="line">  FieldsByNameMap;</span><br><span class="line">  </span><br><span class="line"><span class="keyword">typedef</span> hash_map&lt;DescriptorIntPair, <span class="keyword">const</span> FieldDescriptor*,</span><br><span class="line">                 PointerIntegerPairHash&lt;DescriptorIntPair&gt; &gt;</span><br><span class="line">  FieldsByNumberMap;</span><br><span class="line">  </span><br><span class="line"><span class="keyword">typedef</span> hash_map&lt;EnumIntPair, <span class="keyword">const</span> EnumValueDescriptor*,</span><br><span class="line">                 PointerIntegerPairHash&lt;EnumIntPair&gt; &gt;</span><br><span class="line">  EnumValuesByNumberMap;</span><br></pre></td></tr></table></figure>
+<p><strong>parent的含义</strong></p>
+<p>从<code>BUILD_ARRAY</code>的定义和使用，可以理解<code>parent</code>的含义，有如下3种情况：</p>
+<ol>
+<li>当一个message针对它所包含的成员（<code>field/nested_message/enum/extension</code>）, 这个message的<code>Descriptor*</code> 就是它成员的parent。<pre><code>从函数`DescriptorBuilder::BuildMessage()`中的宏`BUILD_ARRAY`定义可以看出这一点。
+</code></pre></li>
+<li>一个enum，针对它所包含的<code>enum_value</code>是parent（函数<code>DescriptorBuilder::BuildEnum()</code>中体现）</li>
+<li>一个service，针对它所包含的method是parent（函数<code>DescriptorBuilder::BuildService()</code>中体现）</li>
+</ol>
+<p><strong>具体数据成员</strong></p>
+<pre><code>vector&lt;string*&gt; strings_;    // All strings in the pool.
+vector&lt;Message*&gt; messages_;  // All messages in the pool.
+vector&lt;FileDescriptorTables*&gt; file_tables_;  // All file tables in the pool.
+vector&lt;void*&gt; allocations_;  // All other memory allocated in the pool.
+
+SymbolsByNameMap      symbols_by_name_;
+FilesByNameMap        files_by_name_;
+ExtensionsGroupedByDescriptorMap extensions_;
+</code></pre><p><strong>和rollback相关的数据成员</strong></p>
+<pre><code>int strings_before_checkpoint_;
+int messages_before_checkpoint_;
+int file_tables_before_checkpoint_;
+int allocations_before_checkpoint_;
+vector&lt;const char*      &gt; symbols_after_checkpoint_;
+vector&lt;const char*      &gt; files_after_checkpoint_;
+vector&lt;DescriptorIntPair&gt; extensions_after_checkpoint_;
+</code></pre><p><strong>其它数据成员</strong></p>
+<pre><code>vector&lt;string&gt; pending_files_  // stack方式保存的文件名，用来检测文件的循环依赖错误
+</code></pre><h3 id="Checkpoint-Rollback"><a href="#Checkpoint-Rollback" class="headerlink" title="Checkpoint/Rollback"></a>Checkpoint/Rollback</h3><p>和数据库事务处理中的概念一样，在确保数据正常时，生成一个检查点(checkpoint)，针对当前状态做一个快照；如果在后续处理过程中，发生问题，做回滚(rollback)，数据恢复到上一个checkpoint，保证基础服务可以继续，提高系统的可用性。</p>
+<p>生成checkpoint的点只有2个，都在函数<code>DescriptorBuilder::BuildFile()</code>中：</p>
+<ol>
+<li>开始修改<code>DescriptorPool::Tables* tables_</code>内容之前；</li>
+<li>所有操作都成功之后；</li>
+</ol>
+<p><code>DescriptorPool::Tables::Checkpoint():</code></p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> DescriptorPool::Tables::Checkpoint() &#123;</span><br><span class="line">  <span class="comment">// 记录下当前4个vector的size</span></span><br><span class="line">  strings_before_checkpoint_ = strings_.size();</span><br><span class="line">  messages_before_checkpoint_ = messages_.size();</span><br><span class="line">  file_tables_before_checkpoint_ = file_tables_.size();</span><br><span class="line">  allocations_before_checkpoint_ = allocations_.size();</span><br><span class="line"></span><br><span class="line">  <span class="comment">// clear掉3个`***_after_checkpoint_`的vector</span></span><br><span class="line">  symbols_after_checkpoint_.clear();</span><br><span class="line">  files_after_checkpoint_.clear();</span><br><span class="line">  extensions_after_checkpoint_.clear();</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+<p><code>DescriptorPool::Tables::Rollback():</code></p>
+<ol>
+<li>从通过name查询的hashmap删除掉<code>after_checkpoint_[]</code>的数据；</li>
+<li>清理掉<code>after_checkpoint_[]</code>数据；</li>
+<li>通过<code>Checkpoint()</code>记录下来的size，删除vector尾部数据，并且完成resize()，释放掉不再占有的内存空间；</li>
+</ol>
+<blockquote>
+<p>DescriptorPool::Tables中的各个表中的数据是如何注册进来的呢？</p>
+</blockquote>
+<p>对外接口是<code>DescriptorPool::Tables::AddSymbol()</code>，在<code>DescriptorBuilder</code>类的<code>DescriptorBuilder::AddSymbol()</code>和<code>DescriptorBuilder::AddPackage()</code>被调用。</p>
+<h2 id="类DescriptorPool"><a href="#类DescriptorPool" class="headerlink" title="类DescriptorPool"></a>类DescriptorPool</h2><p>负责构造和管理<strong><em>所有的、各种类型的</em></strong>descriptor，并且帮助管理互相<code>cross-linke</code>d的descriptor之间的关系，以及他们之间的数据依赖。可以通过name来从DescriptorPool找到对应descriptor。</p>
+<p><strong>按照singleton方式提供服务，全局数据包含：</strong></p>
+<pre><code>EncodedDescriptorDatabase* generated_database_ = NULL;
+DescriptorPool* generated_pool_ = NULL;
+GOOGLE_PROTOBUF_DECLARE_ONCE(generated_pool_init_);
+</code></pre><p>使用<code>google::protobuf::GoogleOnceInit</code>（本质是pthread_once）来控制仅仅被init一次。</p>
+<p>虽然类DescriptorPool提供了3种构造函数，但从函数<code>InitGeneratedPool()</code>看，仅仅使用了配置<code>DescriptorDatabase*</code>的版本，其余2个并没有使用。在这种情况下，其实 <code>const DescriptorPool* underlay_</code>是为NULL的。</p>
+<pre><code>void InitGeneratedPool() {
+  generated_database_ = new EncodedDescriptorDatabase;
+  generated_pool_ = new DescriptorPool(generated_database_);
+
+  internal::OnShutdown(&amp;DeleteGeneratedPool);
+}
+</code></pre><p>###<code>DescriptorDatabase* fallback_database_</code>###</p>
+<p><strong>作用:</strong></p>
+<ol>
+<li>用于定制地(on-demand)从某种”大”的database加载产生DescriptorPool。因为database太大，逐个调用<code>DescriptorPool::BuildFile()</code> 来处理原database中的每一个proto文件是低效的。为了提升效率，使用DescriptorPool来封装DescriptorDatabase，并且只建立正真需要的descriptor。</li>
+<li>针对编译依赖的每个proto文件，并不是在进程启动时，直接构建出proto中所包含的所有descriptor，而是hang on，直到某个descriptor真的被需要：  <pre><code>(1) 用户调用例如descriptor(), GetDescriptor(), GetReflection()的方法，需要返回descriptor；  
+(2) 用户从DescriptorPool::generated_pool()中查找descriptor；  
+这也是为什么DescriptorPool的底层数据，需要分层的原因！
+</code></pre></li>
+</ol>
+<p><strong>说明：</strong></p>
+<ol>
+<li>采用<code>fallback_database_</code>之后，不能调用<code>BuildFile*()</code> 方法来构建pool,只能使用<code>Find*By*()</code> 方法</li>
+<li><code>Find*By*()</code> 因为上锁，所以即使没有去访问<code>fallback_database_</code>的请求也会变慢</li>
+</ol>
+<h3 id="const-DescriptorPool-underlay-的作用"><a href="#const-DescriptorPool-underlay-的作用" class="headerlink" title="const DescriptorPool* underlay_的作用"></a><code>const DescriptorPool* underlay_</code>的作用</h3><p><strong>Underlay的作用（从注释中得到）：</strong>  </p>
+<p><mark>仅在内部使用，并且可能存在诡异的问题（many subtle gotchas）</mark>，建议使用DescriptorDatabases来解决问题。</p>
+<p><strong>应用场景：</strong>  </p>
+<p>需要runtime方式使用DynamicMessage来解析一个.proto文件，已知这个.proto文件的依赖已经按照静态编译方式包含。</p>
+<ul>
+<li>一方面为了避免重复解析和加载这些依赖内容；</li>
+<li>另一方面不能把runtime的.proto添加到原有的generated_pool()产生的DescriptorPool中，所以并不是直接把这个.proto文件的内容添加到全局的、由generated_pool()产生的DescriptorPool中，而是创建一个新的DescriptorPool，将<code>generated_pool()</code>产生的DescriptorPool作为新的pool的underlay。</li>
+</ul>
+<h3 id="DescriptorPool-Find-By-系列函数"><a href="#DescriptorPool-Find-By-系列函数" class="headerlink" title="DescriptorPool::Find*By*()系列函数"></a><code>DescriptorPool::Find*By*()</code>系列函数</h3><p><strong>作用：</strong></p>
+<p>通过name来从DescriptorPool找到对应descriptor时，查找时先上锁（MutexLockMaybe），代码上看是分3个层级数据来查找的：</p>
+<ol>
+<li>从<code>DescriptorPool::Tables tables_</code>中找，没找到继续第2层中找；</li>
+<li>从<code>DescriptorPool* underlay_</code>中找,没找到继续第3层中找；</li>
+<li>从<code>DescriptorDatabase* fallback_database_</code>中找对应proto，并且调用临时构造的<code>DescriptorBuilder::Build*()</code>系列接口把生成的descriptor添加到<code>tables_</code>中，然后再从<code>tables_</code>中找；</li>
+</ol>
+<blockquote>
+<p>Q: 这里为什么要临时构造一个DescriptorBuilder来使用呢？<br>答案是：锁是针对第3层<code>DescriptorDatabase* fallback_database_</code>的，因为这个可能被同时读/写</p>
+</blockquote>
+<h2 id="类DescriptorBuilder"><a href="#类DescriptorBuilder" class="headerlink" title="类DescriptorBuilder"></a>类DescriptorBuilder</h2><p>封装了DescriptorPool，对外提供descriptor的构造。对外最主要的接口是<code>DescriptorBuilder::BuildFile()</code>，通过FileDescriptorProto来构建FileDescriptor。</p>
+<h2 id="DescriptorProto系列类"><a href="#DescriptorProto系列类" class="headerlink" title="DescriptorProto系列类"></a>DescriptorProto系列类</h2><p>DescriptorProto系列类，在descriptor.proto文件中定义，用来描述由protobuf产生类型的类型原型（proto）。</p>
+<p>一共有如下7种proto</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">FileDescriptorProto</th>
+<th style="text-align:center">用来描述 文件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">DescriptorProto</td>
+<td style="text-align:center">用来描述 消息（message）</td>
+</tr>
+<tr>
+<td style="text-align:left">FieldDescriptorProto</td>
+<td style="text-align:center">用来描述 字段</td>
+</tr>
+<tr>
+<td style="text-align:left">EnumDescriptorProto</td>
+<td style="text-align:center">用来描述 枚举</td>
+</tr>
+<tr>
+<td style="text-align:left">EnumValueDescriptorProto</td>
+<td style="text-align:center">用来描述 枚举值</td>
+</tr>
+<tr>
+<td style="text-align:left">ServiceDescriptorProto</td>
+<td style="text-align:center">用来描述 服务器</td>
+</tr>
+<tr>
+<td style="text-align:left">MethodDescriptorProto</td>
+<td style="text-align:center">用来描述 服务器方法</td>
+</tr>
+</tbody>
+</table>
+<h2 id="类FileDescriptorTables"><a href="#类FileDescriptorTables" class="headerlink" title="类FileDescriptorTables"></a>类FileDescriptorTables</h2><p>单个proto文件中包含的tables，这些tables在文件加载时就固化下来，所以无需使用mutex保护，所以使得依赖单个文件的操作(例如<code>Descriptor::FindFieldByName()</code> )是lock-free的。<br>类<code>FileDescriptorTables</code> 和类 <code>DescriptorPool::Tables</code>过去是在同一个类中定义的。<br>原来Google也有类似的注释：<code>// For historical reasons,xxxxxx。</code></p>
+<p>它所包含的数据结构如下：  </p>
+<pre><code>SymbolsByParentMap    symbols_by_parent_;
+FieldsByNameMap       fields_by_lowercase_name_;
+FieldsByNameMap       fields_by_camelcase_name_;
+FieldsByNumberMap     fields_by_number_;       // Not including extensions.
+EnumValuesByNumberMap enum_values_by_number_;
+</code></pre><h2 id="类DescriptorDatabase"><a href="#类DescriptorDatabase" class="headerlink" title="类DescriptorDatabase"></a>类DescriptorDatabase</h2><p>接口类，用于定制地(on-demand)从某种”大”的database加载产生DescriptorPool。因为database太大，逐个调用<code>DescriptorPool::BuildFile()</code> 来处理原database中的每一个proto文件是低效的。<br>为了提升效率，使用DescriptorPool来封装DescriptorDatabase，并且只建立正真需要的descriptor。</p>
+<p>包含了4个子类，提供通过name查询file_descriptor_proto 的接口（注意这里是file_descriptor_proto，而不是file_descriptor）。</p>
+<h3 id="类SimpleDescriptorDatabase"><a href="#类SimpleDescriptorDatabase" class="headerlink" title="类SimpleDescriptorDatabase"></a>类SimpleDescriptorDatabase</h3><p>索引<code>file_name-&gt; file_descriptor_proto*</code>，拥有被它索引的 <code>file_descriptor_proto*</code>的ownership，并提供<code>add()/find()</code>接口。类SimpleDescriptorDatabase在protobuf中并没有被使用。</p>
+<p><strong>内部实现：</strong></p>
+<ul>
+<li>通过<code>SimpleDescriptorDatabase::DescriptorIndex&lt;const FileDescriptorProto*&gt; index_</code>管理索引结构;</li>
+<li>通过<code>vector&lt;const FileDescriptorProto*&gt;  files_to_delete_</code>管理”深拷贝”的部分;</li>
+</ul>
+<h3 id="类SimpleDescriptorDatabase-DescriptorIndex"><a href="#类SimpleDescriptorDatabase-DescriptorIndex" class="headerlink" title="类SimpleDescriptorDatabase::DescriptorIndex"></a>类SimpleDescriptorDatabase::DescriptorIndex</h3><p><strong>内部实现：</strong></p>
+<ol>
+<li>由<code>map&lt;string，Value&gt;</code>管理从<code>name-&gt;Value</code>的映射关系；</li>
+<li>由<code>map&lt;string，Value&gt;</code>管理file所包含的<code>symbol_name-&gt;Value</code>的映射关系，这里的symbol可以是file包含的message/enum/service；</li>
+<li>由<code>map&lt;string，Value&gt;</code>管理file所包含的<code>extension_name-&gt;Value</code>的映射关系；</li>
+</ol>
+<p><strong>应用：</strong>  </p>
+<p>protobuf中仅在如下2个地方被应用： </p>
+<ol>
+<li>类SimpleDescriptorDatabase中的<code>DescriptorIndex&lt;const FileDescriptorProto*&gt; index_</code></li>
+<li>类EncodedDescriptorDatabase中的<code>SimpleDescriptorDatabase::DescriptorIndex&lt;pair&lt;const void*, int&gt; &gt; index_</code></li>
+</ol>
+<h3 id="类EncodedDescriptorDatabase"><a href="#类EncodedDescriptorDatabase" class="headerlink" title="类EncodedDescriptorDatabase"></a>类EncodedDescriptorDatabase</h3><p><strong>功能说明：</strong></p>
+<p>索引<code>file_name-&gt;pair&lt;const void*, int&gt;</code>，结构<code>pair&lt;const void*, int&gt;</code>中的<code>const void*</code>指的是<code>encoded_file_descriptor</code>字符串的地址，<code>int</code>指的是<code>encoded_file_descriptor</code>字符串的长度。被管理的<code>encoded_file_descriptor</code>有两类ownership：  </p>
+<ol>
+<li>拥有ownership的，通过接口<code>EncodedDescriptorDatabase::AddCopy()</code>实现；</li>
+<li>不用有ownership的 ，通过接口<code>EncodedDescriptorDatabase::Add()</code>实现；</li>
+</ol>
+<p><strong>具体应用：</strong> </p>
+<p>每个proto生成的pb.cc中，都包含将本proto文件encoded之后的string添加到EncodedDescriptorDatabase中的函数。例如<code>protobuf/compiler/plugin.pb.cc</code>中的</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">protobuf_AddDesc_google_2fprotobuf_2fcompiler_2fplugin_2eproto</span><span class="params">()</span> </span>&#123;                                                   </span><br><span class="line"></span><br><span class="line">  …… <span class="comment">//省略函数</span></span><br><span class="line"></span><br><span class="line">  ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(</span><br><span class="line">    <span class="string">"\n%google/protobuf/compiler/plugin.proto\022"</span></span><br><span class="line">    <span class="string">"\030google.protobuf.compiler\032 google/protob"</span></span><br><span class="line">    <span class="string">"uf/descriptor.proto\"&#125;\n\024CodeGeneratorRequ"</span></span><br><span class="line">    <span class="string">"est\022\030\n\020file_to_generate\030\001 \003(\t\022\021\n\tparamet"</span></span><br><span class="line">    <span class="string">"er\030\002 \001(\t\0228\n\nproto_file\030\017 \003(\0132$.google.pr"</span></span><br><span class="line">    <span class="string">"otobuf.FileDescriptorProto\"\252\001\n\025CodeGener"</span></span><br><span class="line">    <span class="string">"atorResponse\022\r\n\005error\030\001 \001(\t\022B\n\004file\030\017 \003("</span></span><br><span class="line">    <span class="string">"\01324.google.protobuf.compiler.CodeGenerat"</span></span><br><span class="line">    <span class="string">"orResponse.File\032&gt;\n\004File\022\014\n\004name\030\001 \001(\t\022\027\n"</span></span><br><span class="line">    <span class="string">"\017insertion_point\030\002 \001(\t\022\017\n\007content\030\017 \001(\t"</span>, <span class="number">399</span>);</span><br><span class="line"></span><br><span class="line">  …… <span class="comment">//省略函数</span></span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>::google::protobuf::DescriptorPool::InternalAddGeneratedFile()</code>定义如下：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> DescriptorPool::InternalAddGeneratedFile(</span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">void</span>* encoded_file_descriptor, <span class="keyword">int</span> size) &#123;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 每个protobuf产出的.pb.cc文件中都会包含InternalAddGeneratedFile()，在进程启动时会调用这个函数，注册.proto文件对应FileDescriptorProto的raw bytes</span></span><br><span class="line"><span class="comment">// Q：进程启动时会调用这个函数，上一级的入口在哪里呢？每个编译依赖(被include)的proto文件都会注册么？</span></span><br><span class="line"><span class="comment">// 针对编译依赖的每个proto文件，并不是在进程启动时，直接构建出proto中所包含的所有descriptor，而是hang on，直到某个descriptor真的被需要：</span></span><br><span class="line"><span class="comment">// (1) 用户调用例如descriptor(), GetDescriptor(), GetReflection()的方法，需要返回descriptor；</span></span><br><span class="line"><span class="comment">// (2) 用户从DescriptorPool::generated_pool()中查找descriptor；</span></span><br><span class="line"><span class="comment">//</span></span><br><span class="line"><span class="comment">// 上述2类请求发生时，DescriptorPool先获得并解析FileDescriptorProto，然后根据它产生对应的FileDescriptor（以及它所包含的descriptor）</span></span><br><span class="line"><span class="comment">//</span></span><br><span class="line"><span class="comment">// 因为FileDescriptorProto类型本身也是由protobuf通过protobuf/descriptor.proto文件产生的，所以当解析的时候，需要注意避免使用任何descriptor-based 的操作，避免死锁和死循环。</span></span><br><span class="line"></span><br><span class="line">  InitGeneratedPoolOnce();</span><br><span class="line">  GOOGLE_CHECK(generated_database_-&gt;Add(encoded_file_descriptor, size));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><strong>内部实现：</strong></p>
+<pre><code>vector&lt;void*&gt; files_to_delete_：记录拥有ownership的encoded_file_descriptor字符串的地址，
+</code></pre><h3 id="类DescriptorPoolDatabase"><a href="#类DescriptorPoolDatabase" class="headerlink" title="类DescriptorPoolDatabase"></a>类DescriptorPoolDatabase</h3><p>针对单一DescriptorPool的封装，查询时先调用内置的DescriptorPool接口，从name查找到对应的file_descriptor, 再调用<code>FileDescriptor::CopyTo()</code>,获得<code>file_descriptor_proto</code>.</p>
+<h3 id="类MergedDescriptorDatabase"><a href="#类MergedDescriptorDatabase" class="headerlink" title="类MergedDescriptorDatabase"></a>类MergedDescriptorDatabase</h3><p>类DescriptorDatabase的子类，封装多个<code>descriptor_database</code>，本身结构简单，用<code>vector&lt;DescriptorDatabase*&gt;</code>保存，逐个遍历查询。</p>
+<h3 id="DescriptorDatabase-相关类的关系图"><a href="#DescriptorDatabase-相关类的关系图" class="headerlink" title="DescriptorDatabase 相关类的关系图"></a>DescriptorDatabase 相关类的关系图</h3><p><img src="https://github.com/felix1xuwei/MarkdownPics/raw/master/pics/protobuf/pb_descriptor_database.png" alt="avatar"></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/protobuf/" rel="tag"># protobuf</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/05/06/protobuf-message/" rel="next" title="Protobuf-Message相关类">
+                <i class="fa fa-chevron-left"></i> Protobuf-Message相关类
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/05/13/protobuf-unknown/" rel="prev" title="Protobuf-Unknown字段">
+                Protobuf-Unknown字段 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">Xu Wei</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">9</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">1</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#类Descriptor"><span class="nav-number">1.</span> <span class="nav-text">类Descriptor</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#const的成员："><span class="nav-number">1.0.1.</span> <span class="nav-text">const的成员：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#非const的成员："><span class="nav-number">1.0.2.</span> <span class="nav-text">非const的成员：</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#类FileDescriptor"><span class="nav-number">2.</span> <span class="nav-text">类FileDescriptor</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#类FieldDescriptor"><span class="nav-number">3.</span> <span class="nav-text">类FieldDescriptor</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#enum类型："><span class="nav-number">3.1.</span> <span class="nav-text">enum类型：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#const类型的private数据："><span class="nav-number">3.2.</span> <span class="nav-text">const类型的private数据：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3个映射表（static-const类型）："><span class="nav-number">3.3.</span> <span class="nav-text">3个映射表（static const类型）：</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#类EnumDescriptor"><span class="nav-number">4.</span> <span class="nav-text">类EnumDescriptor</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#结构体Symbol"><span class="nav-number">5.</span> <span class="nav-text">结构体Symbol</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#类DescriptorPool-Tables"><span class="nav-number">6.</span> <span class="nav-text">类DescriptorPool::Tables</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Checkpoint-Rollback"><span class="nav-number">6.1.</span> <span class="nav-text">Checkpoint/Rollback</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#类DescriptorPool"><span class="nav-number">7.</span> <span class="nav-text">类DescriptorPool</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#const-DescriptorPool-underlay-的作用"><span class="nav-number">7.1.</span> <span class="nav-text">const DescriptorPool* underlay_的作用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#DescriptorPool-Find-By-系列函数"><span class="nav-number">7.2.</span> <span class="nav-text">DescriptorPool::Find*By*()系列函数</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#类DescriptorBuilder"><span class="nav-number">8.</span> <span class="nav-text">类DescriptorBuilder</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#DescriptorProto系列类"><span class="nav-number">9.</span> <span class="nav-text">DescriptorProto系列类</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#类FileDescriptorTables"><span class="nav-number">10.</span> <span class="nav-text">类FileDescriptorTables</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#类DescriptorDatabase"><span class="nav-number">11.</span> <span class="nav-text">类DescriptorDatabase</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#类SimpleDescriptorDatabase"><span class="nav-number">11.1.</span> <span class="nav-text">类SimpleDescriptorDatabase</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#类SimpleDescriptorDatabase-DescriptorIndex"><span class="nav-number">11.2.</span> <span class="nav-text">类SimpleDescriptorDatabase::DescriptorIndex</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#类EncodedDescriptorDatabase"><span class="nav-number">11.3.</span> <span class="nav-text">类EncodedDescriptorDatabase</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#类DescriptorPoolDatabase"><span class="nav-number">11.4.</span> <span class="nav-text">类DescriptorPoolDatabase</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#类MergedDescriptorDatabase"><span class="nav-number">11.5.</span> <span class="nav-text">类MergedDescriptorDatabase</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#DescriptorDatabase-相关类的关系图"><span class="nav-number">11.6.</span> <span class="nav-text">DescriptorDatabase 相关类的关系图</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Xu Wei</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

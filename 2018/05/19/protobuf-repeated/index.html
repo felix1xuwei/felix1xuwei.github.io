@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="protobuf," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="Repeated类型field包含2种类型：  Strings/Message类型使用RepeatedPtrFields enum / primitive类型使用RepeatedFields  核心类关系图如下：  类RepeatedField模板类，为primitive类型数据提供repeated类型容器。内部实现为连续内存的array（保存的内容就是primitive对象），并且对外提供ite">
+<meta name="keywords" content="protobuf">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Protobuf-Repeated相关类">
+<meta property="og:url" content="http://yoursite.com/2018/05/19/protobuf-repeated/index.html">
+<meta property="og:site_name" content="Felix1XuWei&#39;s Blog">
+<meta property="og:description" content="Repeated类型field包含2种类型：  Strings/Message类型使用RepeatedPtrFields enum / primitive类型使用RepeatedFields  核心类关系图如下：  类RepeatedField模板类，为primitive类型数据提供repeated类型容器。内部实现为连续内存的array（保存的内容就是primitive对象），并且对外提供ite">
+<meta property="og:locale" content="default">
+<meta property="og:image" content="https://github.com/felix1xuwei/MarkdownPics/raw/master/pics/protobuf/pb_repeated_class_diagram.png">
+<meta property="og:image" content="https://github.com/felix1xuwei/MarkdownPics/raw/master/pics/protobuf/pb_repeated_memory.png">
+<meta property="og:updated_time" content="2018-06-01T02:19:22.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Protobuf-Repeated相关类">
+<meta name="twitter:description" content="Repeated类型field包含2种类型：  Strings/Message类型使用RepeatedPtrFields enum / primitive类型使用RepeatedFields  核心类关系图如下：  类RepeatedField模板类，为primitive类型数据提供repeated类型容器。内部实现为连续内存的array（保存的内容就是primitive对象），并且对外提供ite">
+<meta name="twitter:image" content="https://github.com/felix1xuwei/MarkdownPics/raw/master/pics/protobuf/pb_repeated_class_diagram.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2018/05/19/protobuf-repeated/"/>
+
+
+
+
+
+  <title>Protobuf-Repeated相关类 | Felix1XuWei's Blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="default">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Felix1XuWei's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            About
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/05/19/protobuf-repeated/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Xu Wei">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Felix1XuWei's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Protobuf-Repeated相关类</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-05-19T22:16:07+08:00">
+                2018-05-19
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h4 id="Repeated类型"><a href="#Repeated类型" class="headerlink" title="Repeated类型"></a>Repeated类型</h4><p>field包含2种类型：</p>
+<ul>
+<li>Strings/Message类型使用RepeatedPtrFields</li>
+<li>enum / primitive类型使用RepeatedFields</li>
+</ul>
+<p>核心类关系图如下：</p>
+<p><img src="https://github.com/felix1xuwei/MarkdownPics/raw/master/pics/protobuf/pb_repeated_class_diagram.png" alt="avatar"></p>
+<h4 id="类RepeatedField"><a href="#类RepeatedField" class="headerlink" title="类RepeatedField"></a>类RepeatedField</h4><p>模板类，为primitive类型数据提供repeated类型容器。内部实现为连续内存的array（保存的内容就是primitive对象），并且对外提供iterator方式来访问。   </p>
+<p>array起始大小为4(static const int kInitialSize = 4;)，当长度不够的时候会分配新的内存（max(total_size_ * 2, new_size)）以及内存拷贝，所以如果repeated的成员很多，使用Reserve()接口能节省array增大时的内存分配和数据拷贝成本。</p>
+<h4 id="类RepeatedPtrFieldBase"><a href="#类RepeatedPtrFieldBase" class="headerlink" title="类RepeatedPtrFieldBase"></a>类RepeatedPtrFieldBase</h4><p>RepeatedPtrFields的父类（不是模板类，提供了多个模板函数），本身保存/管理的数据类型为void*（message对象的实际地址，也是通过连续内存array来保存）。</p>
+<p>RepeatedPtrFieldBase类并不感知自己管理的具体是什么message，通过模板函数的模板参数TypeHandler来为各种数据类型数据提供服务，例如：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">	<span class="keyword">template</span> &lt;<span class="keyword">typename</span> TypeHandler&gt;</span><br><span class="line">	<span class="keyword">void</span> RepeatedPtrFieldBase::Clear() &#123;</span><br><span class="line">	  <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; current_size_; i++) &#123;</span><br><span class="line">	    TypeHandler::Clear(cast&lt;TypeHandler&gt;(elements_[i]));</span><br><span class="line">	  &#125;</span><br><span class="line">	  current_size_ = <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>因为array中保存的是同一个descriptor对应的message，只是各个message中所包含的数据不一样，为了节省下message对象分配/删除的成本，所以message可以被clear(clear操作会将primitive类型的field设置为0，其余类型field调用自身的clear()接口处理，例如string类型的std::string::clear(),只清理数据并不回收内存)，然后保留原有的内存地址在array中。下次需要从array中分配message时，优先使用这一批被clear的message（实现在RepeatedPtrFieldBase::AddFromCleared() ，参考GeneratedMessageReflection::AddMessage()中的调用方式）。<br>为了管理cleared状态的message指针，引入了多个游标来标记数据：</p>
+<ul>
+<li>current_size_: 当前待处理的message地址；</li>
+<li>allocated_size_:已经分配message的数据，current_size_ &lt;= allocated_size_，从current_size_到allocated_size_之间的message就是被cleared的；</li>
+<li>total_size_: elements_[]的长度，但从allocated_size_到total_size_之间的void*是无效的，并没有指向任何message；</li>
+</ul>
+<p>对应内存分布如下：<br><img src="https://github.com/felix1xuwei/MarkdownPics/raw/master/pics/protobuf/pb_repeated_memory.png" alt="avatar"></p>
+<h4 id="类RepeatedPtrField"><a href="#类RepeatedPtrField" class="headerlink" title="类RepeatedPtrField"></a>类RepeatedPtrField</h4><p>模板类，RepeatedPtrFieldBase的子类，为Strings/Message类型数据提供repeated类型容器。</p>
+<blockquote>
+<p>Q: 这里RepeatedPtrField类是RepeatedPtrFieldBase类唯一的子类，是否也没有必要这样区分父类/子类呢？<br>Answer如下：</p>
+</blockquote>
+<h6 id="提前铺垫（父类-子类的分工）："><a href="#提前铺垫（父类-子类的分工）：" class="headerlink" title="提前铺垫（父类/子类的分工）："></a>提前铺垫（父类/子类的分工）：</h6><ul>
+<li>RepeatedPtrFieldBase（非模板类，提供模板函数）负责的是最基本的基于array&lt;void*&gt;的操作，并不感知所保存的内容的数据类型，所有需要区分类型的操作都有模板类型TypeHandler来负责；</li>
+<li>RepeatedPtrField（模板类）感知数据类型(数据类型由模板参数Element提供)，并且对外的接口都是基于类型Element的。针对Element的操作则由TypeHandler来负责，并且通过父类RepeatedPtrFieldBase模板函数的参数传递给父类。  </li>
+</ul>
+<p>这种分工可以在RepeatedPtrField<element>的很多函数上体现，例如：</element></p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> Element&gt;</span><br><span class="line"><span class="keyword">inline</span> <span class="keyword">void</span> RepeatedPtrField&lt;Element&gt;::RemoveLast() &#123;</span><br><span class="line">	 RepeatedPtrFieldBase::RemoveLast&lt;TypeHandler&gt;();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h6 id="本质原因："><a href="#本质原因：" class="headerlink" title="本质原因："></a>本质原因：</h6><p>某些情况下无法感知子类(模板类)RepeatedPtrField<element>的模板参数Element，所以并不清楚具体子类，只能指向父类RepeatedPtrFieldBase。  </element></p>
+<p>例如在GeneratedMessageReflection::AddMessage()中，其实message子类中保存的是RepeatedPtrField<element>对象（可以参考student.proto中的例子），所以只能将使用父类RepeatedPtrFieldBase指针指向RepeatedPtrField<element>的对象，然后：  </element></element></p>
+<ol>
+<li>调用RepeatedPtrFieldBase::AddFromCleared<typehandler>()，尝试获取已cleared但未释放的message对象。如果没有，就继续；</typehandler></li>
+<li>获取一个prototype（指向真实Message子类对象的父类Message指针）：<br>   (2.1)先看RepeatedPtrFieldBase的array&lt;RepeatedPtrField<element> &gt;是否有成员，如果有就使用;<br>   (2.2)调用factory-&gt;GetPrototype()创建一个；</element></li>
+<li>调用prototype（指向真实Message子类对象的父类Message指针）的Message::New()接口，创建出一个真实field_descriptor对应的Message子类对象；</li>
+</ol>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">Message* GeneratedMessageReflection::AddMessage(</span><br><span class="line">    Message* message, <span class="keyword">const</span> FieldDescriptor* field,</span><br><span class="line">    MessageFactory* factory) <span class="keyword">const</span> &#123;</span><br><span class="line">   </span><br><span class="line">    <span class="comment">// 省略非核心代码</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// We can't use AddField&lt;Message&gt;() because RepeatedPtrFieldBase doesn't</span></span><br><span class="line">    <span class="comment">// know how to allocate one.</span></span><br><span class="line">    RepeatedPtrFieldBase* repeated =</span><br><span class="line">      MutableRaw&lt;RepeatedPtrFieldBase&gt;(message, field);</span><br><span class="line">    Message* result = repeated-&gt;AddFromCleared&lt;GenericTypeHandler&lt;Message&gt; &gt;();</span><br><span class="line">    <span class="keyword">if</span> (result == <span class="literal">NULL</span>) &#123;</span><br><span class="line">      <span class="comment">// We must allocate a new object.</span></span><br><span class="line">      <span class="keyword">const</span> Message* prototype;</span><br><span class="line">      <span class="keyword">if</span> (repeated-&gt;size() == <span class="number">0</span>) &#123;</span><br><span class="line">        prototype = factory-&gt;GetPrototype(field-&gt;message_type());</span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        prototype = &amp;repeated-&gt;Get&lt;GenericTypeHandler&lt;Message&gt; &gt;(<span class="number">0</span>);</span><br><span class="line">      &#125;</span><br><span class="line">      result = prototype-&gt;New();</span><br><span class="line">      repeated-&gt;AddAllocated&lt;GenericTypeHandler&lt;Message&gt; &gt;(result);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> result;</span><br><span class="line">  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<pre><code>Q：这里的TypeHandler是在哪里定义的呢？类RepeatedPtrField中并没有提供接口来针对不同数据类型设置typehandler?  
+</code></pre><p> Answer如下：</p>
+</blockquote>
+<p>定义在repeated_field.h中，根据模板类RepeatedPtrField&lt;&gt;模板参数的不同（Element或者string），继承了不同的父类（因为这里子类自己并没有独有的数据/行为，所以用这种方式来选择使用哪种handler）：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> Element&gt;</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">RepeatedPtrField</span>&lt;Element&gt;:</span>:TypeHandler</span><br><span class="line">    : <span class="keyword">public</span> internal::GenericTypeHandler&lt;Element&gt; &#123;&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">template</span> &lt;&gt;</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">RepeatedPtrField</span>&lt;string&gt;:</span>:TypeHandler</span><br><span class="line">    : <span class="keyword">public</span> internal::StringTypeHandler &#123;&#125;;</span><br></pre></td></tr></table></figure>
+<p>typehandler是直接子类RepeatedPtrField在调用父类RepeatedPtrFieldBase的模板函数时，通过模板参数直接传入父类RepeatedPtrFieldBase，可以通过GeneratedMessageReflection中使用的例子来看：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> Message&amp; GeneratedMessageReflection::GetRepeatedMessage(</span><br><span class="line">    <span class="keyword">const</span> Message&amp; message, <span class="keyword">const</span> FieldDescriptor* field, <span class="keyword">int</span> index) <span class="keyword">const</span> &#123;</span><br><span class="line"></span><br><span class="line">     …… <span class="comment">//省略</span></span><br><span class="line"></span><br><span class="line">      <span class="keyword">return</span> GetRaw&lt;RepeatedPtrFieldBase&gt;(message, field)</span><br><span class="line">        .Get&lt;GenericTypeHandler&lt;Message&gt; &gt;(index);                                                                                                                            </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>模板函数RepeatedPtrFieldBase::Get<typehandler>()，这里的TypeHandler就是GenericTypeHandler<message>：</message></typehandler></p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> TypeHandler&gt;</span><br><span class="line"><span class="keyword">inline</span> <span class="keyword">const</span> <span class="keyword">typename</span> TypeHandler::Type&amp;</span><br><span class="line">RepeatedPtrFieldBase::Get(<span class="keyword">int</span> index) <span class="keyword">const</span> &#123;</span><br><span class="line">  GOOGLE_DCHECK_LT(index, size());</span><br><span class="line">  <span class="keyword">return</span> *cast&lt;TypeHandler&gt;(elements_[index]);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>注意：这里TypeHandler是RepeatedPtrField类的protected成员，为了不让用户再将RepeatedPtrField作为父类来使用：</p>
+</blockquote>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">protected</span>:</span><br><span class="line"><span class="comment">// Note:  RepeatedPtrField SHOULD NOT be subclassed by users.  We only</span></span><br><span class="line"><span class="comment">//   subclass it in one place as a hack for compatibility with proto1.  The</span></span><br><span class="line"><span class="comment">//   subclass needs to know about TypeHandler in order to call protected</span></span><br><span class="line"><span class="comment">//   methods on RepeatedPtrFieldBase.</span></span><br><span class="line">  <span class="class"><span class="keyword">class</span> <span class="title">TypeHandler</span>;</span></span><br></pre></td></tr></table></figure>
+<h4 id="类GenericTypeHandler"><a href="#类GenericTypeHandler" class="headerlink" title="类GenericTypeHandler"></a>类GenericTypeHandler</h4><p>针对message的typehandler</p>
+<h4 id="类StringTypeHandler"><a href="#类StringTypeHandler" class="headerlink" title="类StringTypeHandler"></a>类StringTypeHandler</h4><p>StringTypeHandlerBase的子类，在父类基础上增加了SpaceUsed()接口。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">	<span class="class"><span class="keyword">class</span> <span class="title">LIBPROTOBUF_EXPORT</span> <span class="title">StringTypeHandler</span> :</span> <span class="keyword">public</span> StringTypeHandlerBase &#123;</span><br><span class="line">	 <span class="keyword">public</span>:</span><br><span class="line">	  <span class="function"><span class="keyword">static</span> <span class="keyword">int</span> <span class="title">SpaceUsed</span><span class="params">(<span class="keyword">const</span> <span class="built_in">string</span>&amp; value)</span>  </span>&#123;</span><br><span class="line">	    <span class="keyword">return</span> <span class="keyword">sizeof</span>(value) + StringSpaceUsedExcludingSelf(value);</span><br><span class="line">	  &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>这里需要理解string的数据结构来理解这段代码了，从代码看start/end是保存在string对象的前第一/前第二个位置<code>void*</code>（sizeof(void*)为8个byte）的。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">StringSpaceUsedExcludingSelf</span><span class="params">(<span class="keyword">const</span> <span class="built_in">string</span>&amp; str)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">const</span> <span class="keyword">void</span>* start = &amp;str;</span><br><span class="line">  <span class="keyword">const</span> <span class="keyword">void</span>* end = &amp;str + <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (start &lt;= str.data() &amp;&amp; str.data() &lt;= end) &#123;</span><br><span class="line">    <span class="comment">// The string's data is stored inside the string object itself.</span></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> str.capacity();</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>Q: 为什么需要区分父类/子类呢？直接使用StringTypeHandler即可啊</p>
+<p>Answer如下：</p>
+</blockquote>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// HACK:  If a class is declared as DLL-exported in MSVC, it insists on</span></span><br><span class="line"><span class="comment">//   generating copies of all its methods -- even inline ones -- to include</span></span><br><span class="line"><span class="comment">//   in the DLL.  But SpaceUsed() calls StringSpaceUsedExcludingSelf() which</span></span><br><span class="line"><span class="comment">//   isn't in the lite library, therefore the lite library cannot link if</span></span><br><span class="line"><span class="comment">//   StringTypeHandler is exported.  So, we factor out StringTypeHandlerBase,                                                                                               </span></span><br><span class="line"><span class="comment">//   export that, then make StringTypeHandler be a subclass which is NOT</span></span><br><span class="line"><span class="comment">//   exported.</span></span><br><span class="line"><span class="comment">// TODO(kenton):  There has to be a better way.</span></span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/protobuf/" rel="tag"># protobuf</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/05/13/protobuf-unknown/" rel="next" title="Protobuf-Unknown字段">
+                <i class="fa fa-chevron-left"></i> Protobuf-Unknown字段
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/05/20/protobuf-reflection/" rel="prev" title="Protobuf-Reflection类">
+                Protobuf-Reflection类 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">Xu Wei</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">9</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">1</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#Repeated类型"><span class="nav-number">1.</span> <span class="nav-text">Repeated类型</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#类RepeatedField"><span class="nav-number">2.</span> <span class="nav-text">类RepeatedField</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#类RepeatedPtrFieldBase"><span class="nav-number">3.</span> <span class="nav-text">类RepeatedPtrFieldBase</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#类RepeatedPtrField"><span class="nav-number">4.</span> <span class="nav-text">类RepeatedPtrField</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#提前铺垫（父类-子类的分工）："><span class="nav-number">4.0.1.</span> <span class="nav-text">提前铺垫（父类/子类的分工）：</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#本质原因："><span class="nav-number">4.0.2.</span> <span class="nav-text">本质原因：</span></a></li></ol></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#类GenericTypeHandler"><span class="nav-number">5.</span> <span class="nav-text">类GenericTypeHandler</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#类StringTypeHandler"><span class="nav-number">6.</span> <span class="nav-text">类StringTypeHandler</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Xu Wei</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
